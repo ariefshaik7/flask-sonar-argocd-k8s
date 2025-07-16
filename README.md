@@ -1,9 +1,9 @@
-# Flask App CI/CD with Jenkins, SonarQube, Docker, Kubernetes & ArgoCD
+
+# Flask App CI/CD with GitHub Actions, SonarQube, Docker, Kubernetes & ArgoCD
 
 ![Image](https://github.com/user-attachments/assets/a3b2585a-86bb-4999-a92d-bd530f2b0c85)
 
-
-This project demonstrates a complete DevOps workflow using a **Python Flask web application** with a CI/CD pipeline powered by Jenkins, SonarQube, Docker, Kubernetes, and ArgoCD.
+This project demonstrates a complete DevOps workflow using a **Python Flask web application** with a CI/CD pipeline powered by GitHub Actions, SonarQube, Docker, Kubernetes, and ArgoCD.
 
 ---
 
@@ -12,7 +12,7 @@ This project demonstrates a complete DevOps workflow using a **Python Flask web 
 | Tool | Purpose |
 | --- | --- |
 | Flask | Python web application framework |
-| Jenkins | CI/CD automation |
+| GitHub Actions | CI/CD automation |
 | SonarQube | Code quality and static analysis |
 | Docker | Containerization |
 | Kubernetes | Application deployment/scaling |
@@ -22,51 +22,33 @@ This project demonstrates a complete DevOps workflow using a **Python Flask web 
 
 ---
 
-## Step-by-Step Setup Instructions
+## CI/CD Workflow with GitHub Actions
 
-### 1\. Install Jenkins
+### ✅ Steps
 
-```bash
-sudo apt update
-sudo apt install openjdk-17-jdk -y
-wget -q -O - https://pkg.jenkins.io/debian-stable/jenkins.io.key | sudo apt-key add -
-sudo sh -c 'echo deb https://pkg.jenkins.io/debian-stable binary/ > /etc/apt/sources.list.d/jenkins.list'
-sudo apt update
-sudo apt install jenkins -y
-sudo systemctl enable jenkins
-sudo systemctl start jenkins
-```
-
-Access Jenkins at `http://<ip>:8080`. To get the password:
-
-```bash
-sudo cat /var/lib/jenkins/secrets/initialAdminPassword
-```
-
-Install suggested plugins and also install:
-
-* Docker Pipeline
-    
-* SonarQube Scanner
-    
-* GitHub Plugin
-    
+1. Checkout code from GitHub
+2. Set up Python 3.11
+3. Install dependencies and run unit tests with `pytest`
+4. Perform static code analysis with SonarQube
+5. Build Docker image and push to DockerHub
+6. Update Kubernetes manifest file (`deployment.yml`) with new image tag
+7. Push updated YAMLs to GitHub
+8. ArgoCD detects the change and deploys the new version automatically
 
 ---
 
-### 2\. Install Docker
+## Secrets Configuration (GitHub Settings > Secrets)
 
-```bash
-sudo apt install docker.io -y
-sudo systemctl enable docker
-sudo systemctl start docker
-sudo usermod -aG docker jenkins
-sudo systemctl restart jenkins
-```
+| Secret Name           | Description |
+|-----------------------|-------------|
+| `SONARQUBE`           | SonarQube token |
+| `DOCKERHUB_USERNAME`  | DockerHub username |
+| `DOCKERHUB_PASSWORD`  | DockerHub password |
+| `GIT_PAT`             | GitHub Personal Access Token with repo push permissions |
 
 ---
 
-### 3\. Install SonarQube
+### Install SonarQube
 
 ```bash
 sudo apt update
@@ -87,38 +69,22 @@ cd /opt/sonarqube/bin/linux-x86-64/
 Access SonarQube at `http://<ip>:9000` and log in using `admin/admin`. Create a project and generate a token.
 
 ---
+## Kubernetes & ArgoCD Setup
 
-### 4\. Add Credentials in Jenkins
-
-Go to **Manage Jenkins &gt; Credentials &gt; Global &gt; Add Credentials**:
-
-* **GitHub**: Username + Token (with repo access)
-    
-* **Docker Hub**: Username + Docker token
-    
-* **SonarQube**: Secret text (Sonar token)
-    
-
----
-
-### 5\. Install Kubernetes CLI and Start Minikube Cluster
+### 1. Install Kubernetes CLI and Minikube
 
 ```bash
 curl -LO "https://dl.k8s.io/release/$(curl -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
 chmod +x kubectl
 sudo mv kubectl /usr/local/bin/
 
-# Install Minikube
 curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
 sudo install minikube-linux-amd64 /usr/local/bin/minikube
 
-# Start Minikube
 minikube start
 ```
 
----
-
-### 6\. Install and Configure ArgoCD
+### 2. Install and Configure ArgoCD
 
 ```bash
 kubectl create namespace argocd
@@ -133,24 +99,18 @@ Get ArgoCD password:
 kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 --decode
 ```
 
-Access ArgoCD UI using the NodePort IP and login with username `admin` and the decoded password.
+Access ArgoCD UI using NodePort IP. Login: `admin` / `<decoded password>`
 
 ---
 
-### 7\. Configure ArgoCD Application
+## Configure ArgoCD Application
 
-Use the ArgoCD UI to configure your application:
+- **Git Repo**: Your GitHub repo URL
+- **Path**: Folder with Kubernetes manifests (`flask-app-manifests`)
+- **Namespace**: `default`
+- **Sync Policy**: Manual or Auto
 
-* **Git Repo**: Link to your GitHub repo
-    
-* **Path**: Folder containing Kubernetes manifests (e.g. `flask-app-manifests`)
-    
-* **Namespace**: `default`
-    
-* **Sync Policy**: Auto or Manual
-    
-
-Ensure the `service.yaml` contains:
+Ensure your `service.yaml` contains:
 
 ```yaml
 spec:
@@ -159,7 +119,7 @@ spec:
 
 ---
 
-### 8\. Sample Flask `service.yaml`
+## Sample Flask `service.yaml`
 
 ```yaml
 apiVersion: v1
@@ -183,7 +143,7 @@ Apply the service:
 kubectl apply -f service.yaml
 ```
 
-Get the URL:
+Get the app URL:
 
 ```bash
 minikube service flask-app -n default
@@ -191,23 +151,15 @@ minikube service flask-app -n default
 
 ---
 
-## Jenkins Pipeline Flow
+## GitHub Actions Workflow Overview
 
-1. Pull code from GitHub
-    
-2. Run SonarQube analysis (for Python)
-    
-3. Build and package Flask app
-    
-4. Build Docker image and push to Docker Hub
-    
-5. Update `deployment.yaml` with new image tag
-    
-6. Push updated YAMLs to GitHub
-    
-7. ArgoCD detects change and deploys automatically
-    
+This project uses GitHub Actions as the CI/CD engine. Here's a summary of the `.github/workflows/ci-cd.yml`:
+
+- Code checkout
+- Python test with `pytest`
+- Static analysis using SonarQube
+- Docker image build and push
+- Deployment file update with latest image tag
+- Git push for GitOps (ArgoCD)
 
 ---
-
-This project demonstrates an end-to-end DevOps CI/CD pipeline for a Python Flask web application using Jenkins, SonarQube, Docker, Kubernetes, and ArgoCD.
