@@ -4,7 +4,9 @@ on:
   push:
     branches:
       - master
-
+    paths:
+      - 'flask-app/**'        # Only trigger on code changes
+      - '!flask-app-manifests/**'  # Ignore changes to deployment files
 
 jobs:
   build:
