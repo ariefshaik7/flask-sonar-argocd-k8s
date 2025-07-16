@@ -4,7 +4,9 @@ on:
   push:
     branches:
       - master
-    
+    paths:
+      - 'flask-app/**'        # Only trigger on code changes
+      - '!flask-app-manifests/**'  # Ignore changes to deployment files
 
 jobs:
   build:
@@ -72,9 +74,10 @@ jobs:
           cd ${GIT_REPO_NAME}
           git config user.email "ariefshaik001@gmail.com"
           git config user.name "arief"
+          sed -i "s/replaceImageTag/${{ github.run_number }}/g" flask-app-manifests/deployment.yml
           sed -i "s|ariefshaik007/ci-cd-flask-app:.*|ariefshaik007/ci-cd-flask-app:${{ github.run_number }}|g" flask-app-manifests/deployment.yml
           git add flask-app-manifests/deployment.yml
-          git commit -m "Update deployment image to version ${{ github.run_number }}" || echo "No changes to commit"
+          git commit -m "Update deployment image to version ${{ github.run_number }} [skip ci]" || echo "No changes to commit"
           git push https://${{ secrets.GIT_PAT }}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:master
         env:
           GIT_REPO_NAME: "flask-sonar-argocd-k8s"
