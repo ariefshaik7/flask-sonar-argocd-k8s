@@ -42,7 +42,10 @@ jobs:
       - name: Static Code Analysis
         run: |
           cd flask-app
-          sonar-scanner -Dsonar.login=$SONAR_AUTH_TOKEN -Dsonar.host.url=$SONAR_URL
+          sonar-scanner \
+          -Dsonar.projectKey=flask-sonar-argocd-k8s \
+          -Dsonar.login=$SONAR_AUTH_TOKEN \
+          -Dsonar.host.url=$SONAR_URL
         env:
           SONAR_URL: "http://134.33.64.163:9000"
           SONAR_AUTH_TOKEN: ${{ secrets.SONARQUBE }}
