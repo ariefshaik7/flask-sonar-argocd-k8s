@@ -1,6 +1,6 @@
 # Flask App CI/CD with Jenkins, SonarQube, Docker, Kubernetes & ArgoCD
 
-![Image](https://github.com/user-attachments/assets/7d5b9587-162b-46c6-9157-a3797a5018e8 align="left")
+![CI/CD Pipeline](https://github.com/user-attachments/assets/ad08378e-3702-43b3-9dad-691835d9bc35)
 
 
 This project demonstrates a complete DevOps workflow using a **Python Flask web application** with a CI/CD pipeline powered by Jenkins, SonarQube, Docker, Kubernetes, and ArgoCD.
