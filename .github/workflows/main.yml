@@ -75,7 +75,7 @@ jobs:
           sed -i "s/replaceImageTag/${{ github.run_number }}/g" flask-app-manifests/deployment.yml
           git add flask-app-manifests/deployment.yml
           git commit -m "Update deployment image to version ${{ github.run_number }}" || echo "No changes to commit"
-          git push https://${{ secrets.GIT_PAT }}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:master
+          git push https://${{ secrets.GIT_PAT }}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:auto-deploy
         env:
           GIT_REPO_NAME: "flask-sonar-argocd-k8s"
           GIT_USER_NAME: "ariefshaik7"
