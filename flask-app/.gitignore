@@ -1,0 +1,11 @@
+# Ignore Python cache
+__pycache__/
+*.py[cod]
+
+# Optional: Ignore test cache
+*.pytest_cache/
+.cache/
+
+# Ignore virtual environments (optional)
+venv/
+env/
