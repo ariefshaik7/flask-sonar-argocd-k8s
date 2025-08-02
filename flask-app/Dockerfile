@@ -6,7 +6,7 @@ COPY flask-app/requirements.txt .
 
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY . .
+COPY flask-app/ .
 
 EXPOSE 5000
 
