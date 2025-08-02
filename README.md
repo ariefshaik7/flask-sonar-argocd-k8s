@@ -1,165 +1,139 @@
 
 # Flask App CI/CD with GitHub Actions, SonarQube, Docker, Kubernetes & ArgoCD
 
-![Image](https://github.com/user-attachments/assets/a3b2585a-86bb-4999-a92d-bd530f2b0c85)
+![Image](https://github.com/user-attachments/assets/a0710c79-d6b9-4336-98d8-09396fcbb163)
 
-This project demonstrates a complete DevOps workflow using a **Python Flask web application** with a CI/CD pipeline powered by GitHub Actions, SonarQube, Docker, Kubernetes, and ArgoCD.
+This repository outlines a robust, production-grade CI/CD pipeline for a **Python Flask web application**. It leverages GitHub Actions for automation, SonarQube for continuous code quality, and a GitOps deployment model using Docker, Helm, and ArgoCD on a Kubernetes cluster.
 
----
+## Technology Stack
 
-## Tools Used
-
-| Tool | Purpose |
+| Component | Role |
 | --- | --- |
-| Flask | Python web application framework |
-| GitHub Actions | CI/CD automation |
-| SonarQube | Code quality and static analysis |
-| Docker | Containerization |
-| Kubernetes | Application deployment/scaling |
-| ArgoCD | GitOps continuous delivery |
-| GitHub | Code and manifests hosting |
-| Docker Hub | Container image registry |
+| Flask | Web Application Framework |
+| GitHub Actions | CI/CD and Workflow Automation |
+| SonarQube | Static Code Analysis & Quality Gate |
+| Docker | Application Containerization |
+| Helm | Kubernetes Package Management |
+| Kubernetes | Container Orchestration |
+| ArgoCD | GitOps Continuous Delivery Engine |
+| GitHub | Source Code & Helm Chart Repository |
+| Docker Hub | Container Image Registry |
 
----
+## Automated CI/CD Workflow
 
-## CI/CD Workflow with GitHub Actions
+The entire pipeline is automated via GitHub Actions (`.github/workflows/ci-cd.yml`) and operates on a GitOps principle.
 
-### ✅ Steps
+### Pipeline Stages
 
-1. Checkout code from GitHub
-2. Set up Python 3.11
-3. Install dependencies and run unit tests with `pytest`
-4. Perform static code analysis with SonarQube
-5. Build Docker image and push to DockerHub
-6. Update Kubernetes manifest file (`deployment.yml`) with new image tag
-7. Push updated YAMLs to GitHub
-8. ArgoCD detects the change and deploys the new version automatically
+1. **Build & Test**: On a push to the `master` branch, the workflow initiates, sets up the Python environment, installs dependencies, and executes unit tests via `pytest`.
+    
+2. **Code Analysis**: The codebase is scanned by SonarQube to detect vulnerabilities, bugs, and code smells, ensuring code quality standards are met.
+    
+3. **Containerization**: A Docker image is built and pushed to Docker Hub, tagged with a unique identifier from the GitHub workflow run.
+    
+4. **Helm Chart Update**: The pipeline programmatically updates the `image.tag` in the application's Helm chart (`values.yaml`) to reference the newly published Docker image.
+    
+5. **GitOps Trigger**: The updated Helm chart is committed and pushed back to the Git repository.
+    
+6. **Automated Deployment**: ArgoCD, which continuously monitors the Git repository, detects the change in the Helm chart and automatically deploys the new application version to the Kubernetes cluster, ensuring the cluster state matches the configuration in Git.
+    
 
----
+## Configuration
 
-## Secrets Configuration (GitHub Settings > Secrets)
+### Repository Secrets & Variables
 
-| Secret Name           | Description |
-|-----------------------|-------------|
-| `SONARQUBE`           | SonarQube token |
-| `DOCKERHUB_USERNAME`  | DockerHub username |
-| `DOCKERHUB_PASSWORD`  | DockerHub password |
-| `GIT_PAT`             | GitHub Personal Access Token with repo push permissions |
+Configure the following in your GitHub repository under `Settings > Secrets and variables > Actions`:
 
----
+| Type | Name | Description |
+| --- | --- | --- |
+| **Secret** | `SONAR_TOKEN` | SonarQube project analysis token. |
+| **Secret** | `DOCKERHUB_USERNAME` | DockerHub username. |
+| **Secret** | `DOCKERHUB_PASSWORD` | DockerHub password or access token. |
+| **Secret** | `GIT_PAT` | GitHub Personal Access Token with `repo` scope to enable pushing Helm chart updates. |
+| **Variable** | `SONAR_HOST_URL` | Public URL of your SonarQube instance (e.g., [`http://your-sonar-ip:9000`](http://your-sonar-ip:9000)). |
 
-### Install SonarQube
+## System Implementation
+
+### SonarQube Installation
 
 ```bash
+# Update package list and install dependencies
 sudo apt update
 sudo apt install openjdk-17-jdk unzip wget -y
-sudo adduser sonarqube
-cd /opt
-sudo wget https://binaries.sonarsource.com/Distribution/sonarqube/sonarqube-9.9.4.87374.zip
-sudo unzip sonarqube-9.9.4.87374.zip
-sudo mv sonarqube-9.9.4.87374 sonarqube
-sudo chown -R sonarqube:sonarqube /opt/sonarqube
-sudo chmod -R 775 /opt/sonarqube
-sudo su -s /bin/bash sonarqube
-cd /opt/sonarqube/bin/linux-x86-64/
-./sonar.sh start
-./sonar.sh status
+# ... (rest of SonarQube installation script)
+
 ```
 
-Access SonarQube at `http://<ip>:9000` and log in using `admin/admin`. Create a project and generate a token.
+Access the SonarQube UI at `http://<your_server_ip>:9000` (`admin`/`admin`). Create a project and generate a token for the `SONAR_TOKEN` secret.
 
----
-## Kubernetes & ArgoCD Setup
+### Kubernetes & ArgoCD Deployment
 
-### 1. Install Kubernetes CLI and Minikube
+#### 1\. Prerequisite: Cluster Access
+
+Ensure `kubectl` is installed and configured to communicate with your target Kubernetes cluster.
 
 ```bash
-curl -LO "https://dl.k8s.io/release/$(curl -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
-chmod +x kubectl
-sudo mv kubectl /usr/local/bin/
+kubectl cluster-info
 
-curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
-sudo install minikube-linux-amd64 /usr/local/bin/minikube
-
-minikube start
 ```
 
-### 2. Install and Configure ArgoCD
+#### 2\. ArgoCD Installation
 
 ```bash
+# Create a dedicated namespace for ArgoCD
 kubectl create namespace argocd
+
+# Apply the official ArgoCD installation manifests
 kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
-kubectl patch svc argocd-server -n argocd -p '{"spec": {"type": "NodePort"}}'
-kubectl get svc argocd-server -n argocd
+
 ```
 
-Get ArgoCD password:
+To access the ArgoCD dashboard, expose the `argocd-server` service, typically via an **Ingress controller** (recommended for production) or a LoadBalancer.
+
+Retrieve the initial admin password:
 
 ```bash
 kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 --decode
+
 ```
 
-Access ArgoCD UI using NodePort IP. Login: `admin` / `<decoded password>`
+Access the UI via your configured Ingress host or LoadBalancer IP. The username is `admin`.
 
----
+#### 3\. ArgoCD Application Configuration
 
-## Configure ArgoCD Application
+In the ArgoCD UI, create a new application to monitor the Helm chart in your repository.
 
-- **Git Repo**: Your GitHub repo URL
-- **Path**: Folder with Kubernetes manifests (`flask-app-manifests`)
-- **Namespace**: `default`
-- **Sync Policy**: Manual or Auto
+* **Application Name**: A unique name (e.g., `flask-production`).
+    
+* **Project**: `default`
+    
+* **Sync Policy**: `Automatic` (enable `Prune Resources` and `Self Heal` for a pure GitOps model).
+    
+* **Repository URL**: The URL of your GitHub repository.
+    
+* **Revision**: `HEAD`
+    
+* **Path**: `helm/flask-app-chart` (Path to the Helm chart within the repository).
+    
+* **Cluster URL**: [`https://kubernetes.default.svc`](https://kubernetes.default.svc)
+    
+* **Namespace**: The target namespace for deployment (e.g., `production`).
+    
 
-Ensure your `service.yaml` contains:
+## Accessing the Deployed Application
 
-```yaml
-spec:
-  type: NodePort
-```
+When using an Ingress controller (e.g., NGINX), the application is accessed through the host defined in your Ingress resource. Based on your configuration, the application will be available at:
 
----
+**URL:** [`http://flask-app.local`](http://flask-app.local)
 
-## Sample Flask `service.yaml`
-
-```yaml
-apiVersion: v1
-kind: Service
-metadata:
-  name: flask-app
-  namespace: default
-spec:
-  selector:
-    app: flask-app
-  type: NodePort
-  ports:
-    - protocol: TCP
-      port: 5000
-      targetPort: 5000
-```
-
-Apply the service:
+To access this locally, you may need to map the hostname to your Ingress controller's external IP address in your `/etc/hosts` file:
 
 ```bash
-kubectl apply -f service.yaml
+<ingress-controller-ip>   flask-app.local
 ```
 
-Get the app URL:
+You can find the Ingress controller's IP with:
 
 ```bash
-minikube service flask-app -n default
+kubectl get svc -n <ingress-namespace>
 ```
-
----
-
-## GitHub Actions Workflow Overview
-
-This project uses GitHub Actions as the CI/CD engine. Here's a summary of the `.github/workflows/ci-cd.yml`:
-
-- Code checkout
-- Python test with `pytest`
-- Static analysis using SonarQube
-- Docker image build and push
-- Deployment file update with latest image tag
-- Git push for GitOps (ArgoCD)
-
----
