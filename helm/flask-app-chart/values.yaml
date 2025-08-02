@@ -1,6 +1,6 @@
 
 
 image:
-  repository: ariefshaik007/ci-cd-flask-app
+  repository: ariefshaik007/flask-app
   pullPolicy: IfNotPresent
   tag: '16694635762'

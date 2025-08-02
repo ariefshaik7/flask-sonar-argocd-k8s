@@ -16,6 +16,6 @@ spec:
     spec:
       containers:
       - name: flask-app
-        image: ariefshaik007/ci-cd-flask-app:v1
+        image: ariefshaik007/flask-app:v1
         ports:
         - containerPort: 8080
