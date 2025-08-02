@@ -89,3 +89,4 @@ jobs:
           git add helm/flask-app-chart/values.yaml
           git commit -m "Update Helm chart"
           git push
+          
