@@ -6,7 +6,7 @@ on:
       - master
     paths-ignore:
       - 'README.md'
-      - 'flask-app-manifests/**'
+      - 'helm/**'
 
 jobs:
   build:
@@ -89,4 +89,3 @@ jobs:
           git add helm/flask-app-chart/values.yaml
           git commit -m "Update Helm chart"
           git push
-          
