@@ -29,7 +29,6 @@ jobs:
       - name: Test
         working-directory: ./flask-app
         run: |
-          cd flask-app
           pytest test_app.py
 
   sonarqube:
