@@ -9,7 +9,7 @@ spec:
   selector:
     matchLabels:
       app: flask-app
-  namespace-selector:
+  namespaceSelector:
     matchNames:
       - default
   endpoints:
