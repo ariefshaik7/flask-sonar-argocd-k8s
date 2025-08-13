@@ -3,4 +3,4 @@
 image:
   repository: ariefshaik007/flask-app
   pullPolicy: IfNotPresent
-  tag: '16694949425'
+  tag: '16928976593'
