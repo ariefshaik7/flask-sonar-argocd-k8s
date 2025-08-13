@@ -6,6 +6,8 @@ on:
       - master
     paths-ignore:
       - 'README.md'
+      - 'monitoring/README.md'
+      - 'flask-app/README.md'
       - 'helm/**'
 
 jobs:
