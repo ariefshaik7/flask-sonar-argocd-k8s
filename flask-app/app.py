@@ -1,8 +1,10 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+from prometheus_flask_exporter import PrometheusMetrics
 
 app = Flask(__name__, static_folder='static')
-CORS(app)  # Allow CORS if frontend is separate
+metrics = PrometheusMetrics(app)
+CORS(app)  
 
 # In-memory task list
 tasks = []
