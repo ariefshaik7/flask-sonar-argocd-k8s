@@ -15,6 +15,6 @@ spec:
         pathType: Prefix
         backend:
           service:
-            name: flask-app
+            name: monitoring-kube-prometheus-prometheus 
             port:
-              number: 5000
+              number: 9090
